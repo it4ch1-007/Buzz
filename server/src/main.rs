@@ -132,7 +132,7 @@ async fn handle_clients(mut tcp:TcpStream,tx: Sender<String>,names:Names,rooms:R
         tokio::select! {
             msg = stream.next() => {
             //This is the way for the server to get commands from all the clients using the application
-                let user_msg = match msg{
+                let user_msg = match msg {
                     Some(msg) => msg.unwrap(),
                     None => break,
                 };
