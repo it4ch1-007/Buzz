@@ -9,6 +9,7 @@ use std::io::Stdout;
 use std::borrow::Cow;
 
 
+#[derive(Clone)]
 //This is the basic struct that will get all the resources we need for the application to function its ui
 pub struct App{
     pub messages: Vec<String>,
