@@ -41,4 +41,6 @@ cargo run
 - The above commands runs the application in the current terminal with the GUI. Every window that runs the application.exe will result in a new user and the server allows the users to talk to each other.
 
 
+https://github.com/user-attachments/assets/a0d1bef0-1d30-44cb-a8ce-943dcc623fd0
+
 
