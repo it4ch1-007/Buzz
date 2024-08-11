@@ -1,9 +1,12 @@
 use std::io;
 use std::sync::Arc;
+use futures::{stream, SinkExt, StreamExt};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio_util::codec::{FramedWrite,FramedRead, LinesCodec};
 use tokio::net::TcpStream;
+use tokio::sync::Mutex;
 use tokio::task::block_in_place;
-use tokio::sync::{Mutex, MutexGuard};
+use tokio::time::{timeout, Duration};
 use tui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout},
@@ -13,28 +16,71 @@ use tui::{
     Terminal,
 };
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
+#[derive(Debug, PartialEq)]
+enum Key {
+    Char(char),
+    Enter,
+    Backspace,
+    Left,
+    Right,
+    Esc,
+    Ctrl(char),
+    Alt(char),
+    Null,
+}
+
+struct Input {
+    key: Key,
+    ctrl: bool,
+    alt: bool,
+}
+
+impl From<KeyEvent> for Input {
+    fn from(event: KeyEvent) -> Self {
+        let ctrl = event.modifiers.contains(KeyModifiers::CONTROL);
+        let alt = event.modifiers.contains(KeyModifiers::ALT);
+        let key = match event.code {
+            KeyCode::Char(c) if ctrl => Key::Ctrl(c),
+            KeyCode::Char(c) if alt => Key::Alt(c),
+            KeyCode::Char(c) => Key::Char(c),
+            KeyCode::Enter => Key::Enter,
+            KeyCode::Backspace => Key::Backspace,
+            KeyCode::Left => Key::Left,
+            KeyCode::Right => Key::Right,
+            KeyCode::Esc => Key::Esc,
+            _ => Key::Null,
+        };
+
+        Input { key, ctrl, alt }
+    }
+}
+
+// Define the ChatApp struct
 struct ChatApp {
     input: String,
     messages: Arc<Mutex<Vec<String>>>,
-    stream: Arc<Mutex<TcpStream>>,
 }
 
 impl ChatApp {
-    async fn new(addr: &str) -> io::Result<ChatApp> {
+    // Create a new instance of ChatApp and connect to the server
+    async fn new(addr: &str) -> io::Result<(ChatApp, TcpStream)> {
         let stream = TcpStream::connect(addr).await?;
-        Ok(ChatApp {
+        Ok((
+            ChatApp {
             input: String::new(),
             messages: Arc::new(Mutex::new(vec!["Welcome to the chat!".to_string()])),
-            stream: Arc::new(Mutex::new(stream)),
-        })
+            
+        },
+    stream,
+))
     }
-
-    async fn run(&mut self) -> io::Result<()> {
+    // Run the chat application
+    async fn run(&mut self, mut stream: TcpStream) -> io::Result<()> {
         enable_raw_mode()?;
         let mut stdout = io::stdout();
         execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -42,30 +88,58 @@ impl ChatApp {
         let mut terminal = Terminal::new(backend)?;
 
         let messages_clone = Arc::clone(&self.messages);
-        let stream_clone = Arc::clone(&self.stream);
-
-        // Clone the stream for the reader task
-        let stream_for_reader = Arc::clone(&stream_clone);
-
+        // let stream_clone = Arc::clone(&self.stream);
+        let (mut read_half, mut write_half) = stream.into_split();
+        // let read_half = Arc::new(Mutex::new(read_half));
+        // let read_half_clone = Arc::clone(&read_half);
+        let mut reader = FramedRead::new(read_half,LinesCodec::new());
         // Spawn a task to read messages from the server
+        let mut writer = FramedWrite::new(write_half,LinesCodec::new());
         tokio::spawn(async move {
-            
-            
+            // let mut line = String::new();
             loop {
-                let mut line = String::new();
-                let mut stream = stream_for_reader.lock().await;
-                let mut reader = BufReader::new(&mut *stream);
-                match reader.read_line(&mut line).await {
-                    Ok(0) => break, // EOF
-                    Ok(_) => {
-                        messages_clone.lock().await.push(format!("Server: {}", line.trim()));
-                    }
-                    Err(_) => break,
-                }
+                // let mut stream = stream_clone.lock().await;
+                
+                let mut msg = reader.next().await;
+                let user_msg = match msg {
+                    Some(msg) => msg.unwrap(),
+                    None => break,
+                };
+                messages_clone.lock().await.push(user_msg);
             }
         });
+        
 
+        //Loop for sending the messages to the server
         loop {
+            if event::poll(std::time::Duration::from_millis(100))? {
+                if let Event::Key(key_event) = event::read()? {
+                    if key_event.kind == crossterm::event::KeyEventKind::Press {
+                        match key_event.code {
+                            KeyCode::Char(c) => {
+                                self.input.push(c);
+                            }
+                            KeyCode::Enter => {
+                                
+                                if !self.input.is_empty() {
+                                    let message_to_send = self.input.clone();
+                                    self.input.clear();
+
+                                    writer.send(message_to_send).await.unwrap();
+                                }
+                            }
+                            KeyCode::Backspace => {
+                                self.input.pop();
+                            }
+                            KeyCode::Esc => {
+                                break;
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+        }
+
             // Render the UI
             terminal.draw(|f| {
                 let chunks = Layout::default()
@@ -80,53 +154,26 @@ impl ChatApp {
                     )
                     .split(f.size());
 
-            // Properly scope the lock and conversion
-            let messages = {
-                let messages_guard = block_in_place(|| {
-                    self.messages.blocking_lock()
-                });
-                let items: Vec<ListItem> = messages_guard.iter()
-                    .map(|m| ListItem::new(vec![Spans::from(Span::raw(m.clone()))]))
-                    .collect();
-                
-                List::new(items)
-                    .block(Block::default().borders(Borders::ALL).title("Messages"))
-            };
-            
-            f.render_widget(messages, chunks[0]);
+                // Render messages
+                let messages = {
+                    let messages_guard = block_in_place(|| self.messages.blocking_lock());
 
+                    let items: Vec<ListItem> = messages_guard.iter()
+                        .map(|m| ListItem::new(vec![Spans::from(Span::raw(m.clone()))]))
+                        .collect();
+
+                    List::new(items)
+                        .block(Block::default().borders(Borders::ALL).title("Messages"))
+                };
+
+                f.render_widget(messages, chunks[0]);
+
+                // Render input box
                 let input = Paragraph::new(self.input.as_ref())
                     .style(Style::default().fg(Color::Yellow))
                     .block(Block::default().borders(Borders::ALL).title("Input"));
                 f.render_widget(input, chunks[1]);
             })?;
-
-            // Poll for events
-            if event::poll(std::time::Duration::from_millis(100))? {
-                if let Event::Key(key) = event::read()? {
-                    match key.code {
-                        KeyCode::Enter => {
-                            if !self.input.is_empty() {
-                                let mut stream = self.stream.lock().await;
-                                stream.write_all(self.input.as_bytes()).await?;
-                                stream.write_all(b"\n").await?;
-                                self.messages.lock().await.push(format!("You: {}", self.input));
-                                self.input.clear();
-                            }
-                        }
-                        KeyCode::Char(c) => {
-                            self.input.push(c);
-                        }
-                        KeyCode::Backspace => {
-                            self.input.pop();
-                        }
-                        KeyCode::Esc => {
-                            break;
-                        }
-                        _ => {}
-                    }
-                }
-            }
         }
 
         disable_raw_mode()?;
@@ -143,6 +190,6 @@ impl ChatApp {
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let mut app = ChatApp::new("127.0.0.1:8080").await?;
-    app.run().await
+    let (mut app,mut stream) = ChatApp::new("127.0.0.1:8080").await?;
+    app.run(stream).await
 }

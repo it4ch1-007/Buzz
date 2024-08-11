@@ -1,70 +1,44 @@
-# Getting Started with Create React App
+# Buzz 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Buzz is a modern peer-to-peer as well as peer-to-server chat application developed using the two most famous and useful Rust libraries `Tokio` and `RataTui`.
 
-## Available Scripts
+Among modern chat applications, where the users cannot trust the servers of the application, Buzz is a totally trustable chat application that maintains the privacy of the users to full extent giving them the feature to even choose their own names and rooms in which they can talk privately.
 
-In the project directory, you can run:
+### Key Features
+- Faster<br>
+    Use of asynchronous functions through `Tokio-rs` makes Buzz faster and effective due to its ability to `spawn multiple tasks to handle each client` and `create multiple broadcast and mpsc channels`
+- Rooms<br>
+    Users can create their own rooms and join them to talk about a particular topic with the related people who are interested in the same topic.
+- Names<br>
+    For the beginning, Every user is given a temporary anonymous name starting with `Anon<user_number>`. This ensures total anonymity for the user. However, they have the freedom to choose their names using the `/name` command.
+- Locks<br>
+    The exclusive Mutex and ReadWrite locks provides privacy to the users and not even allows the server to have any control or access to the messages between the peers.
+- CLI-GUI<br>
+    The application has a terminal GUI developed using RataTui-rs with input and message boxes. This GUI works faster and efficiently more than the modern GUI applications.
 
-### `npm start`
+### Useful Commands
+- `/rooms` -> gives the list of the rooms and the clients inside the room.
+- `/join <room_name>` -> allows the client to join the room with a particular room name and creates a new room if the room with the given name does not exist.
+- `/name <new_name>` -> To change the name displayed while chatting
+- `/quit` -> Quits the application
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### How to Use
+- Install Rust using: `https://www.rust-lang.org/tools/install`
+- Clone the github repo of Buzz.
+- Execute the following commands:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```
+cd server
+cargo run
+```
+- Now open a new `Terminal/Powershell` window and execute the commands;
 
-### `npm test`
+```
+cd <Buzz_dir_name>
+cd application
+cargo run
+```
+- The above commands runs the application in the current terminal with the GUI. Every window that runs the application.exe will result in a new user and the server allows the users to talk to each other.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
 
-### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
