@@ -86,20 +86,16 @@ impl ChatApp {
         execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
         let backend = CrosstermBackend::new(stdout);
         let mut terminal = Terminal::new(backend)?;
-
         let messages_clone = Arc::clone(&self.messages);
-        // let stream_clone = Arc::clone(&self.stream);
         let (mut read_half, mut write_half) = stream.into_split();
-        // let read_half = Arc::new(Mutex::new(read_half));
-        // let read_half_clone = Arc::clone(&read_half);
         let mut reader = FramedRead::new(read_half,LinesCodec::new());
+
+
+
         // Spawn a task to read messages from the server
         let mut writer = FramedWrite::new(write_half,LinesCodec::new());
         tokio::spawn(async move {
-            // let mut line = String::new();
             loop {
-                // let mut stream = stream_clone.lock().await;
-                
                 let mut msg = reader.next().await;
                 let user_msg = match msg {
                     Some(msg) => msg.unwrap(),
