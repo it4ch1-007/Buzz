@@ -1,4 +1,5 @@
 mod file_uploading;
+mod helper_fns;
 
 
 use futures::{SinkExt, StreamExt};
@@ -14,7 +15,7 @@ use tokio::sync::broadcast::{self, Sender};
 use tokio_util::codec::{FramedRead, FramedWrite, LinesCodec};
 
 use file_uploading::core::upload;
-
+use helper_fns::notify::show_notification;
 
 const HELP_MSG: &str = "This is help for each of the client";
 const MAIN: &str = "main";
@@ -37,7 +38,7 @@ impl Room {
     //functions to handle the features of the files inside the room's unique files Hashmap
     fn upload_file(&self){
         let (file_name,content) = upload().unwrap();
-        self.files.write().unwrap().insert(file_name, content);
+        self.files.write().unwrap().insert(file_name.split("\\").last().unwrap().to_string(), content);
     }
 
     fn list_all_files(&self)->Vec<String>{
@@ -245,6 +246,7 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                         room.upload_file();
                     }
                     drop(read_guard);
+                    show_notification(format!("Uploaded specified file"));
                     
                 }
                 else if user_msg.starts_with("/list_files"){
@@ -255,20 +257,18 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                         files_list_string = files_list.join("\n");
                     }
                     drop(read_guard);
-                    println!("{}",files_list_string);
-                    // sink.send(format!("Files Available-> \n {files_list_string} ")).await.unwrap();
+                    show_notification(format!("Files available -> \n{files_list_string}"));
                     
                 }
                 else if user_msg.starts_with("/download_file"){
-                    let mut file_name = user_msg.split_ascii_whitespace().nth(1).unwrap().to_owned();
-                    let mut read_guard3 = rooms.0.read().unwrap();
-                    if let Some(room) = read_guard3.get(&room_name){
+                    let file_name = user_msg.split_ascii_whitespace().nth(1).unwrap().to_owned();
+                    show_notification(format!("Downloaded file {file_name}"));
+                    let read_guard = rooms.0.read().unwrap();
+                    if let Some(room) = read_guard.get(&room_name){
                         room.download_file(&file_name);
-                        sink.send(format!("Downloaded file {file_name}"));
                     }
-                    else{
-                        panic!("Room name not available!!!");
-                    }
+                    drop(read_guard);
+                    
                 }
                 else if user_msg.starts_with("/quit"){
                     break;
