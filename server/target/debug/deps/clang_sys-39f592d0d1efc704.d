@@ -1,0 +1,14 @@
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\deps\libclang_sys-39f592d0d1efc704.rmeta: C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\lib.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\support.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\link.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/macros.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/common.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/dynamic.rs
+
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\deps\libclang_sys-39f592d0d1efc704.rlib: C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\lib.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\support.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\link.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/macros.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/common.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/dynamic.rs
+
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\deps\clang_sys-39f592d0d1efc704.d: C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\lib.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\support.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\link.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/macros.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/common.rs C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/dynamic.rs
+
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\lib.rs:
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\support.rs:
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\clang-sys-1.8.1\src\link.rs:
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/macros.rs:
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/common.rs:
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\build\clang-sys-1939cf96e86edc7d\out/dynamic.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\akshi\\Downloads\\PROJS\\Buzz\\server\\target\\debug\\build\\clang-sys-1939cf96e86edc7d\\out
