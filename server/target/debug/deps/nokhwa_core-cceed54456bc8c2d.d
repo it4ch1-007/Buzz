@@ -1,0 +1,10 @@
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\deps\libnokhwa_core-cceed54456bc8c2d.rmeta: C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\lib.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\buffer.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\error.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\pixel_format.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\traits.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\types.rs
+
+C:\Users\akshi\Downloads\PROJS\Buzz\server\target\debug\deps\nokhwa_core-cceed54456bc8c2d.d: C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\lib.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\buffer.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\error.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\pixel_format.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\traits.rs C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\types.rs
+
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\lib.rs:
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\buffer.rs:
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\error.rs:
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\pixel_format.rs:
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\traits.rs:
+C:\Users\akshi\.cargo\registry\src\index.crates.io-6f17d22bba15001f\nokhwa-core-0.1.5\src\types.rs:
