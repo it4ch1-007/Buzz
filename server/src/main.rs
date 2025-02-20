@@ -1,10 +1,10 @@
 mod file_uploading;
 mod helper_fns;
 
-
 use futures::{SinkExt, StreamExt};
 use lazy_static;
-use server::{get_name, GetName};
+use rpassword::read_password;
+use server::{get_name,set_password,get_password, GetName};
 use std::collections::{HashMap, HashSet};
 use std::fs::{self, read, File};
 use std::io::Write;
@@ -22,38 +22,50 @@ const MAIN: &str = "main";
 pub struct Room {
     tx: Sender<String>,
     //a type of a broadcast sender that can help us to establish connection between two clients
-    files: Arc<RwLock<HashMap<String,Vec<u8>>>>,
+    files: Arc<RwLock<HashMap<String, Vec<u8>>>>,
     //this will be the vector hashmap that will store the files uploaded.
+    password: Arc<RwLock<String>>,
 }
 
 impl Room {
     fn new() -> Self {
         let (tx, _) = broadcast::channel(40);
         //to make a new broadcast for every room
-        Self { 
+        Self {
             tx,
             files: Arc::new(RwLock::new(HashMap::new())),
-         }
+            password: Arc::new(RwLock::new(String::new())),
+        }
     }
     //functions to handle the features of the files inside the room's unique files Hashmap
-    fn upload_file(&self){
-        let (file_name,content) = upload().unwrap();
-        self.files.write().unwrap().insert(file_name.split("\\").last().unwrap().to_string(), content);
+    fn upload_file(&self) {
+        let (file_name, content) = upload().unwrap();
+        self.files
+            .write()
+            .unwrap()
+            .insert(file_name.split("\\").last().unwrap().to_string(), content);
     }
 
-    fn list_all_files(&self)->Vec<String>{
+    fn list_all_files(&self) -> Vec<String> {
         //making a list vector of all the filenames only.
         self.files.read().unwrap().keys().cloned().collect()
     }
-    fn download_file(&self,file_name:&String){
+    fn download_file(&self, file_name: &String) {
         //download into the local system
         let mut read_guard = self.files.read().unwrap();
         let mut bytes = read_guard.get(file_name).unwrap();
         let mut new_file = File::create(&file_name).unwrap();
         new_file.write_all(bytes);
-        
+
         //remove it from the hashmap entry
         self.files.write().unwrap().remove(file_name);
+    }
+    fn set_password(&mut self, pass: String) {
+        let mut write_guard = self.password.write().unwrap();
+        *write_guard = pass;
+    }
+    fn get_password(&mut self) -> String {
+        self.password.read().unwrap().to_string()
     }
 }
 #[derive(Clone)]
@@ -131,6 +143,7 @@ impl Names {
     }
 }
 
+
 #[tokio::main]
 async fn main() {
     let server = TcpListener::bind("127.0.0.1:8080").await.unwrap();
@@ -166,7 +179,7 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
     let mut room_name = MAIN.to_owned();
     let mut room_tx = rooms.join_room(&room_name);
     let mut room_rx = room_tx.subscribe();
-    room_tx.send(format!("{name} joined {room_name}"));
+    room_tx.send(format!("{name} joined {room_name}")).unwrap();
     //This is sent only inside the room for the room clients
     loop {
         tokio::select! {
@@ -177,10 +190,10 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                     None => break,
                 };
                 if user_msg.starts_with("/help"){
-                    sink.send(HELP_MSG).await;
+                    sink.send(HELP_MSG).await.unwrap();
                     continue;
                 }
-            //Basically stream and sink are used for the messages sending and receiving by the server and the clients
+                //Basically stream and sink are used for the messages sending and receiving by the server and the clients
                 else if user_msg.starts_with("/rooms"){
                     let rooms_list = rooms.list_rooms();
                     let rooms_list = rooms_list
@@ -190,7 +203,7 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                     .join(", ");
                 //We first created a vector with the elements as tuples that have name and count as elements of a single tuple'
                 //then we join it with , as the separator
-                    sink.send(format!("Rooms -> {rooms_list}")).await;
+                    sink.send(format!("Rooms -> {rooms_list}")).await.unwrap();
                 }
                 else if user_msg.starts_with("/join"){
                     let new_room = user_msg
@@ -200,9 +213,14 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                     .to_owned();
                 //Get the 1th element after splitting the string whitespaces and then joining the room
                 if room_name == new_room{
-                    sink.send(format!("You are already inside the room {room_name}")).await;
+                    sink.send(format!("You are already inside the room {room_name}")).await.unwrap();
                     continue;
                 }
+                //Check for the entered password and the password of the room
+                let password = read_password().unwrap();
+                if get_password() == password{
+                //if we want to get a mutable reference then we have to use the write lock instead of a read lock always
+                
                 //The room_name is now the previous one and thus the client will leave the room
                 room_tx.send(format!("{name} left {room_name}")).unwrap();
                 //The client gets the tx and rx of the new room
@@ -210,8 +228,33 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                 //This statement updates the room_name
                 room_rx = room_tx.subscribe();
                 room_name = new_room;
-                sink.send(format!("{name} joined {room_name}"));
-                room_tx.send(format!("{name} joined {room_name}"));
+                sink.send(format!("{name} joined {room_name}")).await.unwrap();
+                room_tx.send(format!("{name} joined {room_name}")).unwrap();
+                }
+                else{
+                    sink.send(format!("You entered the wrong password!!!")).await.unwrap();
+                }
+            }
+                else if user_msg.starts_with("/set_password_room"){
+                    let password = user_msg
+                    .split_ascii_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_owned();
+                    let mut write_guard = rooms.0.write().unwrap();
+                    if let Some(room) = write_guard.get_mut(&room_name){
+                        room.set_password(password);
+                        //This does not take the ownership of the Room instance and thus the fn has to be amde get the mutabke reference to the instance.
+                    }
+                    drop(write_guard);
+                }
+                else if user_msg.starts_with("/set_password_me"){
+                    let password = user_msg
+                    .split_ascii_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_owned();
+                    set_password(password); //Sets the password for the given user
                 }
                 else if user_msg.starts_with("/name") {
             //This is to split the whitespaces and then get the first element to get the name
@@ -221,7 +264,7 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                     .unwrap()
                     .to_owned();
                //For changing the unique name
-               let mut changed_name = names.insert(new_name.clone());
+               let changed_name = names.insert(new_name.clone());
                //This is to insert the new names inside the list of the names
                if changed_name {
                    //only the room clients will get the names update
@@ -233,7 +276,7 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                 }
                 }
                 else if user_msg.starts_with("/video_call"){
-                    let mut friend_name = user_msg
+                    let friend_name = user_msg
                     .split_ascii_whitespace()
                     .nth(1)
                     .unwrap()
@@ -241,13 +284,13 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
 
                 }
                 else if user_msg.starts_with("/upload_file"){
-                    let mut read_guard = rooms.0.read().unwrap();
+                    let read_guard = rooms.0.read().unwrap();
                     if let Some(room) = read_guard.get(&room_name){
                         room.upload_file();
                     }
                     drop(read_guard);
                     show_notification(format!("Uploaded specified file"));
-                    
+
                 }
                 else if user_msg.starts_with("/list_files"){
                     let read_guard = rooms.0.read().unwrap();
@@ -258,7 +301,7 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                     }
                     drop(read_guard);
                     show_notification(format!("Files available -> \n{files_list_string}"));
-                    
+
                 }
                 else if user_msg.starts_with("/download_file"){
                     let file_name = user_msg.split_ascii_whitespace().nth(1).unwrap().to_owned();
@@ -268,13 +311,13 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
                         room.download_file(&file_name);
                     }
                     drop(read_guard);
-                    
+
                 }
                 else if user_msg.starts_with("/quit"){
                     break;
                 }
                 else{
-                    room_tx.send(format!("{name}: {user_msg}"));
+                    room_tx.send(format!("{name}: {user_msg}")).unwrap();
                 }
             },
             //WHEN WE USE THE TOKIO SELECT STATEMENT THEN THE TOKENS WE USE ARE CONVERTED INTO RESULT ENUMS AND THUS WE HAVE TO UNWRAP THEM FIRST BEFORE USING THEM IN THE FUTURES SPAWNED.
@@ -290,7 +333,7 @@ async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names, ro
         }
     }
 
-    room_tx.send(format!("{name} left the {room_name}"));
+    room_tx.send(format!("{name} left the {room_name}")).unwrap();
     names.remove(&name);
     //If the loop ends then the client has ended his session and has left the chat application.
 }
