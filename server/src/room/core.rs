@@ -5,13 +5,17 @@ use std::sync::{Arc, RwLock};
 use tokio::sync::broadcast;
 use tokio::sync::broadcast::Sender;
 use crate::file_uploading::core::upload;
+use crate::audio::core::upload_audio_msg;
+use std::collections::VecDeque;
+
 
 pub struct Room {
     pub(crate) tx: Sender<String>,
     //a type of a broadcast sender that can help us to establish connection between two clients
     files: Arc<RwLock<HashMap<String, Vec<u8>>>>,
     //this will be the vector hashmap that will store the files uploaded.
-    // audio_msgs: Arc<RwLock<HashSet<T>>>,
+    audio_msgs: Arc<RwLock<VecDeque<(String,Vec<u8>)>>>,
+    //This will be the queue that will store the audio in wav file format inside the queue
     password: Arc<RwLock<String>>,
 }
 
@@ -22,10 +26,20 @@ impl Room {
         Self {
             tx,
             files: Arc::new(RwLock::new(HashMap::new())),
-            // audio_msgs: Arc::new(RwLock::new(HashMap::new())),
+            audio_msgs: Arc::new(RwLock::new(VecDeque::new())),
             password: Arc::new(RwLock::new(String::new())),
         }
     }
+    
+    
+    pub fn upload_audio(&self){
+        let (audio_name,audio_bytes) = upload_audio_msg().unwrap();
+        self.audio_msgs
+            .write()
+            .unwrap()
+            .push_back((audio_name,audio_bytes));
+    }
+    
     //functions to handle the features of the files inside the room's unique files Hashmap
     pub fn upload_file(&self) {
         let (file_name, content) = upload().unwrap();
@@ -49,6 +63,7 @@ impl Room {
         //remove it from the hashmap entry
         self.files.write().unwrap().remove(file_name);
     }
+    
     pub fn set_password(&mut self, pass: String) {
         let mut write_guard = self.password.write().unwrap();
         *write_guard = pass;
