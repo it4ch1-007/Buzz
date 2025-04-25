@@ -1,1 +1,1 @@
-C:\Users\akshi\Downloads\PROJS\Buzz\application\target\debug\application.exe: C:\Users\akshi\Downloads\PROJS\Buzz\application\src\main.rs
+/home/it4ch1/Downloads/projs/Buzz/application/target/debug/application: /home/it4ch1/Downloads/projs/Buzz/application/src/main.rs
