@@ -163,7 +163,22 @@ pub async fn handle_clients(mut tcp: TcpStream, tx: Sender<String>, names: Names
                     .to_owned();
                     room_tx.send(format!("{name} uploaded audio: {audio_msg_name}")).unwrap();
                 }
-
+                
+                //LISTING AUDIO MESSAGES ON THE SERVER
+                else if user_msg.starts_with("/list_audio_msgs"){
+                    
+                }
+                
+                //PLAYING AUDIO MESSAGES 
+                //Command should be like: /play_audio_msg <audio_msg_name> (specified by the sender and seen by the Receiver in the list of audio messages
+                else if user_msg.starts_with("/play_audio_msg"){
+                    let audio_msg_name = user_msg
+                    .split_ascii_whitespace()
+                    .nth(1)
+                    .unwrap()
+                    .to_owned();
+                    
+                }
 
 
                 else if user_msg.starts_with("/upload_file"){
