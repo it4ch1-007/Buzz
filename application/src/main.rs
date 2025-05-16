@@ -1,3 +1,5 @@
+mod markdown_support;
+
 use std::io;
 use std::sync::Arc;
 use futures::{stream, SinkExt, StreamExt};
